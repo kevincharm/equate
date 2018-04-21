@@ -1,0 +1,29 @@
+{
+  "name": "equate",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./build/Release/module.node",
+  "types": "./src/module.d.ts",
+  "scripts": {
+    "build:ts": "yarn tsc ./test/index.ts",
+    "build:native": "yarn node-gyp configure build",
+    "build": "yarn build:native && yarn build:ts",
+    "test": "yarn build && yarn ava ./test"
+  },
+  "keywords": [
+    "image",
+    "diff",
+    "compare",
+    "testing",
+    "native"
+  ],
+  "author": "Kevin Tjiam <kevin@kevincharm.com> (https://github.com/kevincharm)",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^9.6.6",
+    "ava": "^1.0.0-beta.4",
+    "node": ">=8.6.0",
+    "node-gyp": "^3.6.2",
+    "typescript": "^2.8.3"
+  }
+}
