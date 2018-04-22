@@ -1,3 +1,5 @@
+![travis-status](https://travis-ci.org/kevincharm/equate.svg?branch=master)
+
 # equate
 
 Node native module for image diffing/comparison written in C. Requires `node@>=8.6.0` for N-API.
