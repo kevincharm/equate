@@ -11,8 +11,15 @@
 static napi_value img_is_match(napi_env env, napi_callback_info info)
 {
     napi_status status;
-    napi_value out;
+    napi_value result;
 
+    status = napi_create_object(env, &result);
+    OK_OR_THROW(status, "Failed to create result object!")
+
+    napi_value did_match;
+    napi_get_boolean(env, false, &did_match);
+
+    // Get arguments
     size_t argc = 3;
     napi_value argv[argc];
     status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
@@ -32,8 +39,7 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
     status = napi_get_value_double(env, argv[2], &tolerance_pct);
     OK_OR_THROW(status, "Tolerance percentage supplied is invalid!")
 
-    napi_get_boolean(env, false, &out);
-
+    // Parse image buffers into iterable channels per pixel
     int imga_width, imga_height, imga_nchannels, imgb_width, imgb_height, imgb_nchannels;
     uint16_t *imga_pixels = stbi_load_16_from_memory(imga, imga_len,
         &imga_width, &imga_height, &imga_nchannels, 4);
@@ -45,6 +51,7 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
     DEBUG_INFO("imgb { len: %d, w: %d, h: %d, n: %d }\n",
         (int)imgb_len, imgb_width, imgb_height, imgb_nchannels);
 
+    // Exit early if dimensions are different
     if (imga_width != imgb_width ||
         imga_height != imgb_height ||
         imga_nchannels != imgb_nchannels) {
@@ -64,13 +71,18 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
         }
     }
 
-    napi_get_boolean(env, true, &out);
+    // At this point, the two images are considered equivalent
+    napi_get_boolean(env, true, &did_match);
 
 done:
     stbi_image_free(imga_pixels);
     stbi_image_free(imgb_pixels);
 
-    return out;
+    // Populate the results object
+    status = napi_set_named_property(env, result, "didMatch", did_match);
+    OK_OR_THROW(status, "Failed to set property didMatch in result object!")
+
+    return result;
 }
 
 napi_value init(napi_env env, napi_value exports)
