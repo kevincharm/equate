@@ -99,11 +99,11 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
         goto done;
     }
 
-    size_t npixels = imga_width * imga_height;
-    imgdiff_pixels = malloc(npixels);
-    double tolerance_thresh = (npixels * tolerance_pct) / 100.;
+    size_t u16_px_len = imga_width * imga_height * imga_nchannels;
+    imgdiff_pixels = malloc(u16_px_len * sizeof(uint16_t));
+    double tolerance_thresh = (imga_width * imga_height * tolerance_pct) / 100.;
     int pixel_diff_count = 0;
-    for (size_t i=0; i<npixels; i++) {
+    for (size_t i=0; i<u16_px_len; i++) {
         if (imga_pixels[i] != imgb_pixels[i]) {
             pixel_diff_count++;
             size_t rgba_n = i % imga_nchannels;
@@ -126,7 +126,7 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
     }
 
     napi_value image_diff_data;
-    status = napi_create_buffer(env, npixels, (void **)imgdiff_pixels, &image_diff_data);
+    status = napi_create_buffer(env, u16_px_len * sizeof(uint16_t), (void **)imgdiff_pixels, &image_diff_data);
     OK_OR_THROW(status, "Failed to create Buffer for highlighted image diff data!")
     status = napi_set_named_property(env, result, "imageDiffData", image_diff_data);
     OK_OR_THROW(status, "Failed to set property imageDiffData in result object!")
