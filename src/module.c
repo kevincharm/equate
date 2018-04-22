@@ -145,9 +145,7 @@ done:
     // Cleanup
     stbi_image_free(imga_pixels);
     stbi_image_free(imgb_pixels);
-    if (imgdiff_pixels != NULL) {
-        free(imgdiff_pixels);
-    }
+    free(imgdiff_pixels);
 
     napi_value undefined;
     status = napi_get_undefined(env, &undefined);
