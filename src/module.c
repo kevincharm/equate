@@ -125,6 +125,7 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
         napi_get_boolean(env, true, &did_match);
     }
 
+    // TODO(ktjiam): Encode the damn buffer before you return it you doofus.
     napi_value image_diff_data;
     status = napi_create_buffer(env, u16_px_len * sizeof(uint16_t), (void **)imgdiff_pixels, &image_diff_data);
     OK_OR_THROW(status, "Failed to create Buffer for highlighted image diff data!")
