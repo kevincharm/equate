@@ -1,8 +1,7 @@
 import test from 'ava'
 import * as fs from 'fs'
 import * as path from 'path'
-
-const { isMatch } = require('../build/Release/module') // tslint:disable-line
+import { isMatch } from '../src/module'
 
 test('simple buffers correctly calculate mismatch', t => {
     const firstImage = Buffer.from([69, 69, 69, 69])

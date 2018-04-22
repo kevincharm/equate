@@ -24,7 +24,7 @@ Plain JavaScript:
     const firstImage = fs.readFileSync('foo.jpg')
     const secondImage = fs.readFileSync('foo.jpg')
 
-    const result = isMatch(firstImage, secondImage)
+    const result = isMatch(firstImage, secondImage, 0)
     assert(result, true)
 ```
 
@@ -35,6 +35,6 @@ TypeScript (includes type definitions):
     const firstImage = fs.readFileSync('foo.jpg')
     const secondImage = fs.readFileSync('bar.jpg')
 
-    const result = isMatch(firstImage, secondImage)
+    const result = isMatch(firstImage, secondImage, 0)
     assert(result, false)
 ```

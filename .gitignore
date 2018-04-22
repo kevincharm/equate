@@ -1,6 +1,11 @@
 .DS_Store
 build/
+test/**/*.d.ts
 test/**/*.js
+test/**/*.js.map
+src/**/*.d.ts
+src/**/*.js
+src/**/*.js.map
 
 # Logs
 logs

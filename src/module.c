@@ -81,7 +81,7 @@ napi_value init(napi_env env, napi_value exports)
     status = napi_create_function(env, NULL, 0, img_is_match, NULL, &fn);
     OK_OR_THROW(status, "Unable to wrap native function")
 
-    status = napi_set_named_property(env, exports, "isMatch", fn);
+    status = napi_set_named_property(env, exports, "_isMatch", fn);
     OK_OR_THROW(status, "Unable to populate exports")
 
     return exports;
