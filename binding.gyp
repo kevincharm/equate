@@ -6,7 +6,8 @@
         "-std=gnu11"
       ],
       "sources": [
-        "./src/module.c"
+        "./src/module.c",
+        "./src/vendor/lodepng.c"
       ],
       "defines": []
     }
