@@ -1,6 +1,8 @@
 #include <node_api.h>
-#include <stdint.h>
 #include <stdio.h>
+#include <stdint.h>
+#include <float.h>
+#include <math.h>
 #include "util.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -11,7 +13,7 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
     napi_status status;
     napi_value out;
 
-    size_t argc = 2;
+    size_t argc = 3;
     napi_value argv[argc];
     status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
     OK_OR_THROW(status, "Unable to parse arguments!")
@@ -25,6 +27,10 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
     uint8_t *imgb;
     status = napi_get_buffer_info(env, argv[1], (void **)&imgb, &imgb_len);
     OK_OR_THROW(status, "Second buffer supplied is invalid!")
+
+    double tolerance_pct = 0;
+    status = napi_get_value_double(env, argv[2], &tolerance_pct);
+    OK_OR_THROW(status, "Tolerance percentage supplied is invalid!")
 
     napi_get_boolean(env, false, &out);
 
@@ -46,8 +52,16 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
     }
 
     size_t npixels = imga_width * imga_height;
+    double tolerance_thresh = (npixels * tolerance_pct) / 100.;
+    int pixel_diff_count = 0;
     for (size_t i=0; i<npixels; i++) {
-        if (imga_pixels[i] != imgb_pixels[i]) goto done;
+        if (imga_pixels[i] != imgb_pixels[i]) {
+            pixel_diff_count++;
+        }
+
+        if (pixel_diff_count > tolerance_thresh) {
+            goto done;
+        }
     }
 
     napi_get_boolean(env, true, &out);
