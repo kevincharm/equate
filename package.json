@@ -1,7 +1,7 @@
 {
   "name": "equate",
   "version": "1.0.0",
-  "description": "",
+  "description": "Node native module for image diffing/comparison written in C",
   "main": "./build/Release/module.node",
   "types": "./src/module.d.ts",
   "scripts": {
