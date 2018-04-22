@@ -8,7 +8,8 @@
     "build:ts": "yarn tsc ./test/index.ts",
     "build:native": "yarn node-gyp configure build",
     "build": "yarn build:native && yarn build:ts",
-    "test": "yarn build && yarn ava ./test"
+    "test": "yarn build && yarn ava ./test",
+    "prepack": "yarn build && yarn test"
   },
   "keywords": [
     "image",
