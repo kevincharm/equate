@@ -8,14 +8,56 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "vendor/stb_image.h"
 
-enum diff_output_format {
+enum diff_out_fmt {
     DIFF_OUTPUT_JPEG,
     DIFF_OUTPUT_PNG
 };
 
+static inline enum diff_out_fmt get_output_fmt(napi_env env, napi_value options)
+{
+    napi_status status;
+    enum diff_out_fmt output_fmt = DIFF_OUTPUT_PNG;
+
+    napi_value nv_diff_out_fmt;
+    status = napi_get_named_property(env, options, "diffOutputFormat", &nv_diff_out_fmt);
+    if (status != napi_ok) {
+        goto done;
+    }
+
+    bool is_jpeg = false;
+    napi_value nv_str_jpeg;
+    status = napi_create_string_utf8(env, "jpeg", 4, &nv_str_jpeg);
+    OK_OR_THROW(status, "Unable to create string 'jpg'!")
+    status = napi_strict_equals(env, nv_diff_out_fmt, nv_str_jpeg, &is_jpeg);
+    OK_OR_THROW(status, "Unable to compare diffOutputFormat!")
+    if (is_jpeg) {
+        output_fmt = DIFF_OUTPUT_JPEG;
+    }
+
+done:
+    return output_fmt;
+}
+
+static inline double get_tolerance_pct(napi_env env, napi_value options)
+{
+    napi_status status;
+    double tolerance_pct = 0;
+
+    napi_value nv_tolerance_pct;
+    status = napi_get_named_property(env, options, "tolerancePercent", &nv_tolerance_pct);
+    if (status != napi_ok) {
+        goto done;
+    }
+
+    status = napi_get_value_double(env, nv_tolerance_pct, &tolerance_pct);
+    OK_OR_THROW(status, "Tolerance percentage supplied is invalid!")
+
+done:
+    return tolerance_pct;
+}
+
 static napi_value img_is_match(napi_env env, napi_callback_info info)
 {
-
     napi_status status;
 
     napi_value result;
@@ -47,28 +89,10 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
 
     // Options (3rd argument)
     napi_value options = argv[2];
-    napi_value nv_tolerance_pct;
-    double tolerance_pct = 0;
-    status = napi_get_named_property(env, options, "tolerancePercent", &nv_tolerance_pct);
-    if (status == napi_ok) {
-        status = napi_get_value_double(env, nv_tolerance_pct, &tolerance_pct);
-        OK_OR_THROW(status, "Tolerance percentage supplied is invalid!")
-    }
+    double tolerance_pct = get_tolerance_pct(env, options);
 
-    napi_value nv_diff_output_format;
-    enum diff_output_format diff_out_fmt = DIFF_OUTPUT_PNG;
-    status = napi_get_named_property(env, options, "diffOutputFormat", &nv_diff_output_format);
-    if (status == napi_ok) {
-        bool is_jpeg = false;
-        napi_value nv_str_jpeg;
-        status = napi_create_string_utf8(env, "jpeg", 4, &nv_str_jpeg);
-        OK_OR_THROW(status, "Unable to create string 'jpg'!")
-        status = napi_strict_equals(env, nv_diff_output_format, nv_str_jpeg, &is_jpeg);
-        OK_OR_THROW(status, "Unable to compare diffOutputFormat!")
-        if (is_jpeg) {
-            diff_out_fmt = DIFF_OUTPUT_JPEG;
-        }
-    }
+    enum diff_out_fmt output_fmt = get_output_fmt(env, options);
+    (void)output_fmt; // TODO: unused
 
     // Callback (4th argument)
     napi_value arg_cb = argv[3];
