@@ -56,6 +56,17 @@ done:
     return tolerance_pct;
 }
 
+static inline void assert_is_function(napi_env env, napi_value fn)
+{
+    napi_status status;
+    napi_valuetype fn_type;
+    status = napi_typeof(env, fn, &fn_type);
+    OK_OR_THROW(status, "Unable to get typeof callback!")
+    if (fn_type != napi_function) {
+        THROW("Callback (4th argument) must be a function!")
+    }
+}
+
 static napi_value img_is_match(napi_env env, napi_callback_info info)
 {
     napi_status status;
@@ -96,12 +107,7 @@ static napi_value img_is_match(napi_env env, napi_callback_info info)
 
     // Callback (4th argument)
     napi_value arg_cb = argv[3];
-    napi_valuetype arg_cb_type;
-    status = napi_typeof(env, arg_cb, &arg_cb_type);
-    OK_OR_THROW(status, "Unable to get typeof callback!")
-    if (arg_cb_type != napi_function) {
-        THROW("Callback (4th argument) must be a function!")
-    }
+    assert_is_function(env, arg_cb);
 
     // Parse image buffers into iterable channels per pixel
     int imga_width, imga_height, imga_nchannels, imgb_width, imgb_height, imgb_nchannels;
