@@ -131,28 +131,37 @@ static napi_value is_match(napi_env env, napi_callback_info info)
     imgdiff_pixels = malloc(u16_px_len * sizeof(uint16_t));
     int pixel_diff_count = 0;
     for (int i = 0; i < max_width; i++) {
+        bool widthMismatch = false;
         if (i > imga_width || i > imgb_width) {
-            pixel_diff_count++;
-            continue;
+            widthMismatch = true;
         }
 
         for (int j = 0; j < max_height; j++) {
-            if (j > imga_height || j > imgb_height) {
-                pixel_diff_count++;
+            bool heightMismatch = false;
+            if (!widthMismatch && (j > imga_height || j > imgb_height)) {
+                heightMismatch = true;
+            }
+
+            bool pixelMismatch = false;
+            int r = i + (j * max_width);
+            if (!widthMismatch &&
+                !heightMismatch &&
+                (imga_pixels[r] != imgb_pixels[r])) {
+                pixelMismatch = true;
+            }
+
+            if (!widthMismatch && !heightMismatch && !pixelMismatch) {
+                imgdiff_pixels[r] = imga_pixels[r];
                 continue;
             }
 
-            int r = i + (j * max_width);
-            if (imga_pixels[r] != imgb_pixels[r]) {
-                pixel_diff_count++;
-                int rgba_n = r % imga_nchannels;
-                if (rgba_n == 0) {
-                    imgdiff_pixels[r] = 0xffff; // red
-                } else if (rgba_n == 2) {
-                    imgdiff_pixels[r] = 0xffff; // blue
-                } else {
-                    imgdiff_pixels[r] = imga_pixels[r];
-                }
+            // If a mismatch, colour the diff pixel with magenta
+            pixel_diff_count++;
+            int rgba_n = r % imga_nchannels;
+            if (rgba_n == 0) {
+                imgdiff_pixels[r] = 0xffff; // red
+            } else if (rgba_n == 2) {
+                imgdiff_pixels[r] = 0xffff; // blue
             }
         }
     }
