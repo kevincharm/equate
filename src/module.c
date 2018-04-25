@@ -70,15 +70,12 @@ static inline void assert_is_function(napi_env env, napi_value fn)
 static napi_value is_match(napi_env env, napi_callback_info info)
 {
     napi_status status;
-
     napi_value result;
     status = napi_create_object(env, &result);
     OK_OR_THROW(status, "Failed to create result object!")
-
     napi_value global;
     status = napi_get_global(env, &global);
     OK_OR_THROW(status, "Failed to get global object!")
-
     napi_value did_match;
     napi_get_boolean(env, false, &did_match);
 
@@ -88,69 +85,79 @@ static napi_value is_match(napi_env env, napi_callback_info info)
     status = napi_get_cb_info(env, info, &argc, argv, NULL, NULL);
     OK_OR_THROW(status, "Unable to parse arguments!")
 
+    // Get image buffer (1st & 2nd arguments)
     size_t imga_len = 0;
     uint8_t *imga;
     status = napi_get_buffer_info(env, argv[0], (void **)&imga, &imga_len);
     OK_OR_THROW(status, "First buffer supplied is invalid!")
-
     size_t imgb_len = 0;
     uint8_t *imgb;
     status = napi_get_buffer_info(env, argv[1], (void **)&imgb, &imgb_len);
     OK_OR_THROW(status, "Second buffer supplied is invalid!")
 
-    // Options (3rd argument)
+    // Parse options (3rd argument)
     napi_value options = argv[2];
     double tolerance_pct = get_tolerance_pct(env, options);
 
     enum diff_out_fmt output_fmt = get_output_fmt(env, options);
     (void)output_fmt; // TODO: unused
 
-    // Callback (4th argument)
+    // Assert that callback is a function (4th argument)
     napi_value arg_cb = argv[3];
     assert_is_function(env, arg_cb);
 
     // Parse image buffers into iterable channels per pixel
-    int imga_width, imga_height, imga_nchannels, imgb_width, imgb_height, imgb_nchannels;
+    int imga_width = 0;
+    int imga_height = 0;
+    int imga_nchannels = 0;
+    int imgb_width = 0;
+    int imgb_height = 0;
+    int imgb_nchannels = 0;
     uint16_t *imgdiff_pixels = NULL;
     uint16_t *imga_pixels = stbi_load_16_from_memory(imga, imga_len,
         &imga_width, &imga_height, &imga_nchannels, 4);
     uint16_t *imgb_pixels = stbi_load_16_from_memory(imgb, imgb_len,
         &imgb_width, &imgb_height, &imgb_nchannels, 4);
-
-    DEBUG_INFO("imga { len: %d, w: %d, h: %d, n: %d }\n",
-        (int)imga_len, imga_width, imga_height, imga_nchannels);
-    DEBUG_INFO("imgb { len: %d, w: %d, h: %d, n: %d }\n",
-        (int)imgb_len, imgb_width, imgb_height, imgb_nchannels);
-
-    // Exit early if dimensions are different
-    if (imga_width != imgb_width ||
-        imga_height != imgb_height ||
-        imga_nchannels != imgb_nchannels) {
+    if (imga_nchannels != imgb_nchannels ||
+        imga_width == 0 || imga_height == 0 ||
+        imgb_width == 0 || imgb_height == 0) {
+        // TODO: Handle files with different # of channels
         goto done;
     }
 
-    size_t u16_px_len = imga_width * imga_height * imga_nchannels;
+    int max_width = imga_width > imgb_width ? imga_width : imgb_width;
+    int max_height = imga_height > imgb_height ? imga_height : imgb_height;
+    int u16_px_len = imga_width * imga_height * imga_nchannels;
     imgdiff_pixels = malloc(u16_px_len * sizeof(uint16_t));
-    double tolerance_thresh = (imga_width * imga_height * tolerance_pct) / 100.;
     int pixel_diff_count = 0;
-    for (size_t i=0; i<u16_px_len; i++) {
-        if (imga_pixels[i] != imgb_pixels[i]) {
+    for (int i = 0; i < max_width; i++) {
+        if (i > imga_width || i > imgb_width) {
             pixel_diff_count++;
-            size_t rgba_n = i % imga_nchannels;
-            if (rgba_n == 0) {
-                // red
-                imgdiff_pixels[i] = 0xffff;
-            } else if (rgba_n == 2) {
-                // blue
-                imgdiff_pixels[i] = 0xffff;
-            } else {
-                imgdiff_pixels[i] = imga_pixels[i];
+            continue;
+        }
+
+        for (int j = 0; j < max_height; j++) {
+            if (j > imga_height || j > imgb_height) {
+                pixel_diff_count++;
+                continue;
+            }
+
+            int r = i + (j * max_width);
+            if (imga_pixels[r] != imgb_pixels[r]) {
+                pixel_diff_count++;
+                int rgba_n = r % imga_nchannels;
+                if (rgba_n == 0) {
+                    imgdiff_pixels[r] = 0xffff; // red
+                } else if (rgba_n == 2) {
+                    imgdiff_pixels[r] = 0xffff; // blue
+                } else {
+                    imgdiff_pixels[r] = imga_pixels[r];
+                }
             }
         }
     }
 
-    DEBUG_INFO("pixel_diff_count: %d, tolerance_thresh: %.2f\n",
-        (int)pixel_diff_count, tolerance_thresh);
+    double tolerance_thresh = (max_width * max_height * tolerance_pct) / 100.;
     if (pixel_diff_count > tolerance_thresh == false) {
         napi_get_boolean(env, true, &did_match);
     }
