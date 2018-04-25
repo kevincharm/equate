@@ -7,6 +7,8 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "vendor/stb_image.h"
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "vendor/stb_image_write.h"
 
 enum diff_out_fmt {
     DIFF_OUTPUT_JPEG,
@@ -113,13 +115,15 @@ static napi_value is_match(napi_env env, napi_callback_info info)
     int imgb_width = 0;
     int imgb_height = 0;
     int imgb_nchannels = 0;
-    uint16_t *imgdiff_pixels = NULL;
-    uint16_t *imga_pixels = stbi_load_16_from_memory(imga, imga_len,
-        &imga_width, &imga_height, &imga_nchannels, 4);
-    uint16_t *imgb_pixels = stbi_load_16_from_memory(imgb, imgb_len,
-        &imgb_width, &imgb_height, &imgb_nchannels, 4);
-    if (imga_nchannels != imgb_nchannels ||
-        imga_width == 0 || imga_height == 0 ||
+    const int nchannels = 4;
+    uint8_t *imgdiff_png_buffer = NULL;
+    uint8_t *imgdiff_pixels = NULL;
+    // TODO: check for NULL allocation and throw
+    uint8_t *imga_pixels = stbi_load_from_memory(imga, imga_len,
+        &imga_width, &imga_height, &imga_nchannels, nchannels);
+    uint8_t *imgb_pixels = stbi_load_from_memory(imgb, imgb_len,
+        &imgb_width, &imgb_height, &imgb_nchannels, nchannels);
+    if (imga_width == 0 || imga_height == 0 ||
         imgb_width == 0 || imgb_height == 0) {
         // TODO: Handle files with different # of channels
         goto done;
@@ -127,23 +131,26 @@ static napi_value is_match(napi_env env, napi_callback_info info)
 
     int max_width = imga_width > imgb_width ? imga_width : imgb_width;
     int max_height = imga_height > imgb_height ? imga_height : imgb_height;
-    int u16_px_len = imga_width * imga_height * imga_nchannels;
-    imgdiff_pixels = malloc(u16_px_len * sizeof(uint16_t));
+    int u8_img_len = max_width * max_height * nchannels;
+    imgdiff_pixels = malloc(u8_img_len);
     int pixel_diff_count = 0;
-    for (int i = 0; i < max_width; i++) {
+    for (int i = 0; i < max_width * nchannels; i++) {
         bool widthMismatch = false;
-        if (i > imga_width || i > imgb_width) {
+        if (i > (imga_width * nchannels) ||
+            i > (imgb_width * nchannels)) {
             widthMismatch = true;
         }
 
         for (int j = 0; j < max_height; j++) {
             bool heightMismatch = false;
-            if (!widthMismatch && (j > imga_height || j > imgb_height)) {
+            if (!widthMismatch &&
+                (j > imga_height ||
+                j > imgb_height)) {
                 heightMismatch = true;
             }
 
             bool pixelMismatch = false;
-            int r = i + (j * max_width);
+            int r = i + (j * max_width * nchannels);
             if (!widthMismatch &&
                 !heightMismatch &&
                 (imga_pixels[r] != imgb_pixels[r])) {
@@ -157,11 +164,11 @@ static napi_value is_match(napi_env env, napi_callback_info info)
 
             // If a mismatch, colour the diff pixel with magenta
             pixel_diff_count++;
-            int rgba_n = r % imga_nchannels;
+            int rgba_n = r % nchannels;
             if (rgba_n == 0) {
-                imgdiff_pixels[r] = 0xffff; // red
+                imgdiff_pixels[r] = 0xff; // red
             } else if (rgba_n == 2) {
-                imgdiff_pixels[r] = 0xffff; // blue
+                imgdiff_pixels[r] = 0xff; // blue
             }
         }
     }
@@ -171,9 +178,20 @@ static napi_value is_match(napi_env env, napi_callback_info info)
         napi_get_boolean(env, true, &did_match);
     }
 
-    // TODO(ktjiam): Encode the damn buffer before you return it you doofus.
+    int stride_bytes = nchannels * max_width;
+    int imgdiff_png_buffer_len = 0;
+    imgdiff_png_buffer = stbi_write_png_to_mem(imgdiff_pixels, stride_bytes,
+        max_width, max_height, nchannels, &imgdiff_png_buffer_len);
+
+    printf("buffer: ");
+    for (int i = 0; i < 10; i++) {
+        printf("%d ", imgdiff_png_buffer[i]);
+    }
+    printf("\n");
+
     napi_value image_diff_data;
-    status = napi_create_buffer(env, u16_px_len * sizeof(uint16_t), (void **)imgdiff_pixels, &image_diff_data);
+    status = napi_create_buffer(env, imgdiff_png_buffer_len,
+        (void **)&imgdiff_png_buffer, &image_diff_data);
     OK_OR_THROW(status, "Failed to create Buffer for highlighted image diff data!")
     status = napi_set_named_property(env, result, "imageDiffData", image_diff_data);
     OK_OR_THROW(status, "Failed to set property imageDiffData in result object!")
@@ -191,6 +209,7 @@ done:
     // Cleanup
     stbi_image_free(imga_pixels);
     stbi_image_free(imgb_pixels);
+    STBIW_FREE(imgdiff_png_buffer);
     free(imgdiff_pixels);
 
     napi_value undefined;
