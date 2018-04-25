@@ -67,7 +67,7 @@ static inline void assert_is_function(napi_env env, napi_value fn)
     }
 }
 
-static napi_value img_is_match(napi_env env, napi_callback_info info)
+static napi_value is_match(napi_env env, napi_callback_info info)
 {
     napi_status status;
 
@@ -188,7 +188,7 @@ napi_value init(napi_env env, napi_value exports)
     napi_status status;
     napi_value fn;
 
-    status = napi_create_function(env, NULL, 0, img_is_match, NULL, &fn);
+    status = napi_create_function(env, NULL, 0, is_match, NULL, &fn);
     OK_OR_THROW(status, "Unable to wrap native function")
 
     status = napi_set_named_property(env, exports, "_isMatch", fn);
