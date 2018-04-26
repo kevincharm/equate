@@ -51,4 +51,15 @@ test('different images return buffer', async t => {
     const result = await isMatch(firstImage, secondImage, { tolerancePercent: 0, diffOutputFormat: 'png' })
     const pngBuffer = result.imageDiffData
     t.is(pngBuffer.compare(diffImage), 0)
+
+    console.log(
+        `diffImage[${diffImage.byteLength}]: <${diffImage.readUInt8(0)}..${diffImage.readUInt8(
+            diffImage.byteLength - 1
+        )}>`
+    )
+    console.log(
+        `pngBuffer[${pngBuffer.byteLength}]: <${pngBuffer.readUInt8(0)}..${pngBuffer.readUInt8(
+            pngBuffer.byteLength - 1
+        )}>`
+    )
 })
