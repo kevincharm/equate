@@ -19,6 +19,7 @@
     "native"
   ],
   "author": "Kevin Tjiam <kevin@kevincharm.com> (https://github.com/kevincharm)",
+  "repository": "github:kevincharm/equate",
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/node": "^9.6.6",
