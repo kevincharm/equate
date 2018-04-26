@@ -174,7 +174,7 @@ static napi_value is_match(napi_env env, napi_callback_info info)
     }
 
     double tolerance_thresh = (max_width * max_height * tolerance_pct) / 100.;
-    if (pixel_diff_count > tolerance_thresh == false) {
+    if (pixel_diff_count <= tolerance_thresh) {
         napi_get_boolean(env, true, &did_match);
     }
 
