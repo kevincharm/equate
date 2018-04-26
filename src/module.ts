@@ -23,7 +23,7 @@ export interface MatchResult {
 }
 
 /**
- * Compares two images. Returns `true` if the two images are sufficiently similar.
+ * Compares two images.
  * @param imageA A node Buffer object containing raw data of the first image to compare
  * @param imageB A node Buffer object containing raw data of the second image to compare
  * @param options Specify matching options
