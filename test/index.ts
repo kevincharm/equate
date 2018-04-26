@@ -43,13 +43,13 @@ test('different images return mismatch if over threshold', t => {
     })
 })
 
+/*
 test('different images return buffer', t => {
     const firstImage = fs.readFileSync(path.join(__dirname, 'image_a.jpg'))
     const secondImage = fs.readFileSync(path.join(__dirname, 'image_b.jpg'))
     isMatch(firstImage, secondImage, { tolerancePercent: 0, diffOutputFormat: 'jpeg' }, result => {
         const jpegBuffer = result.imageDiffData!
-        console.log(jpegBuffer.readUInt8(0))
-        // fs.writeFileSync(path.join(__dirname, 'image_diff_test.jpg'), jpegBuffer)
         t.is(true, true)
     })
 })
+*/

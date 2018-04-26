@@ -183,15 +183,9 @@ static napi_value is_match(napi_env env, napi_callback_info info)
     imgdiff_png_buffer = stbi_write_png_to_mem(imgdiff_pixels, stride_bytes,
         max_width, max_height, nchannels, &imgdiff_png_buffer_len);
 
-    printf("buffer: ");
-    for (int i = 0; i < 10; i++) {
-        printf("%d ", imgdiff_png_buffer[i]);
-    }
-    printf("\n");
-
     napi_value image_diff_data;
-    status = napi_create_buffer(env, imgdiff_png_buffer_len,
-        (void **)&imgdiff_png_buffer, &image_diff_data);
+    status = napi_create_buffer_copy(env, imgdiff_png_buffer_len,
+        (const void *)imgdiff_png_buffer, NULL, &image_diff_data);
     OK_OR_THROW(status, "Failed to create Buffer for highlighted image diff data!")
     status = napi_set_named_property(env, result, "imageDiffData", image_diff_data);
     OK_OR_THROW(status, "Failed to set property imageDiffData in result object!")
