@@ -8,33 +8,51 @@ Node native module for image diffing/comparison written in C. Requires `node@>=8
 
 Get it via npm:
 ```sh
-    npm install --save equate
+npm install --save equate
 ```
 or
 ```sh
-    yarn add equate
+yarn add equate
 ```
 
 ## Usage
 
 Plain JavaScript:
 ```js
-    const { isMatch } = require('equate')
+const { isMatch } = require('equate')
 
+compare()
+
+async function compare() {
     const firstImage = fs.readFileSync('foo.jpg')
     const secondImage = fs.readFileSync('foo.jpg')
 
-    const result = isMatch(firstImage, secondImage, 0)
-    assert(result, true)
+    const result = await isMatch(firstImage, secondImage, {
+        tolerancePercent: 0,
+        diffOutputFormat: 'png'
+    })
+
+    assert(result.didMatch, true)
+}
 ```
 
 TypeScript (includes type definitions):
 ```ts
-    import { isMatch } from 'equate'
+import { isMatch } from 'equate'
 
+compare()
+
+async function compare() {
     const firstImage = fs.readFileSync('foo.jpg')
     const secondImage = fs.readFileSync('bar.jpg')
 
-    const result = isMatch(firstImage, secondImage, 0)
-    assert(result, false)
+    const result = await isMatch(firstImage, secondImage, {
+        tolerancePercent: 0,
+        diffOutputFormat: 'png'
+    })
+
+    const pngBuffer = result.imageDiffData
+    assert(pngBuffer.readUInt8(0), 0x89)
+    assert(result.didMatch, false)
+}
 ```

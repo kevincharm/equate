@@ -1,9 +1,41 @@
 const { _isMatch } = require('../build/Release/module.node') // tslint:disable-line
 
+export interface MatchOptions {
+    /**
+     * Percentage of pixels allowed to be different for two images to be considered the same
+     */
+    tolerancePercent?: number
+    /**
+     * Format of the image buffer passed back as the image diff
+     */
+    diffOutputFormat?: 'png' | 'jpeg'
+}
+
+export interface MatchResult {
+    /**
+     * `true` if the two images are sufficiently similar
+     */
+    didMatch: boolean
+    /**
+     * Buffer containing image data highlighting the diff
+     */
+    imageDiffData?: Buffer
+}
+
 /**
- * Compares two images. Returns `true` if the two images are sufficiently similar.
+ * Compares two images.
  * @param imageA A node Buffer object containing raw data of the first image to compare
  * @param imageB A node Buffer object containing raw data of the second image to compare
- * @param tolerancePercentage Percentage of pixels allowed to be different for two images to be considered the same
+ * @param options Specify matching options
  */
-export const isMatch: (imageA: Buffer, imageB: Buffer, tolerancePercentage: number) => boolean = _isMatch
+export function isMatch(imageA: Buffer, imageB: Buffer, options: MatchOptions): Promise<MatchResult> {
+    return new Promise((resolve, reject) => {
+        try {
+            _isMatch(imageA, imageB, options, (result: MatchResult) => {
+                resolve(result)
+            })
+        } catch (err) {
+            reject(err)
+        }
+    })
+}
