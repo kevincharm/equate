@@ -50,5 +50,5 @@ test('different images return buffer', async t => {
 
     const result = await isMatch(firstImage, secondImage, { tolerancePercent: 0, diffOutputFormat: 'png' })
     const pngBuffer = result.imageDiffData
-    t.deepEqual(pngBuffer, diffImage)
+    t.is(pngBuffer.compare(diffImage), 0)
 })
