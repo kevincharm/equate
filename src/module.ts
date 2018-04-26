@@ -22,17 +22,20 @@ export interface MatchResult {
     imageDiffData?: Buffer
 }
 
-export type MatchResultCallback = (result: MatchResult) => void
-
 /**
  * Compares two images. Returns `true` if the two images are sufficiently similar.
  * @param imageA A node Buffer object containing raw data of the first image to compare
  * @param imageB A node Buffer object containing raw data of the second image to compare
  * @param options Specify matching options
  */
-export const isMatch: (
-    imageA: Buffer,
-    imageB: Buffer,
-    options: MatchOptions,
-    callback: MatchResultCallback
-) => MatchResult = _isMatch
+export function isMatch(imageA: Buffer, imageB: Buffer, options: MatchOptions): Promise<MatchResult> {
+    return new Promise((resolve, reject) => {
+        try {
+            _isMatch(imageA, imageB, options, (result: MatchResult) => {
+                resolve(result)
+            })
+        } catch (err) {
+            reject(err)
+        }
+    })
+}

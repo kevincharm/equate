@@ -1,3 +1,6 @@
+#ifndef UTIL__H_
+#define UTIL__H_
+
 #include <node_api.h>
 
 #define OK_OR_THROW(status, description)                \
@@ -16,3 +19,5 @@
 #else
 #define DEBUG_INFO(...)
 #endif
+
+#endif /* UTIL__H_ */

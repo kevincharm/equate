@@ -178,6 +178,9 @@ static napi_value is_match(napi_env env, napi_callback_info info)
         napi_get_boolean(env, true, &did_match);
     }
 
+    if (output_fmt != DIFF_OUTPUT_PNG) {
+        THROW("Only PNG diff output is currently supported!")
+    }
     int stride_bytes = nchannels * max_width;
     int imgdiff_png_buffer_len = 0;
     imgdiff_png_buffer = stbi_write_png_to_mem(imgdiff_pixels, stride_bytes,
