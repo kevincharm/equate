@@ -43,7 +43,7 @@ test('different images return mismatch if over threshold', async t => {
     t.is(result.didMatch, false)
 })
 
-test('different images return buffer', async t => {
+test('different images return buffer of image diff', async t => {
     const firstImage = fs.readFileSync(path.join(__dirname, 'image_a.jpg'))
     const secondImage = fs.readFileSync(path.join(__dirname, 'image_b.jpg'))
     const diffImage = fs.readFileSync(path.join(__dirname, 'image_diff.png'))
@@ -54,9 +54,5 @@ test('different images return buffer', async t => {
     })
     const pngBuffer = result.imageDiffData
 
-    /**
-     * For some reason, this buffer compare on Linux returns 1-byte difference, but 0 on macOS.
-     * ¯\_(ツ)_/¯
-     */
-    t.true(Math.abs(pngBuffer.compare(diffImage)) <= 1)
+    t.true(pngBuffer.equals(diffImage))
 })

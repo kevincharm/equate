@@ -167,6 +167,8 @@ static napi_value is_match(napi_env env, napi_callback_info info)
             int rgba_n = r % nchannels;
             if (rgba_n == 0) {
                 imgdiff_pixels[r] = 0xff; // red
+            } else if (rgba_n == 1) {
+                imgdiff_pixels[r] = 0; // green
             } else if (rgba_n == 2) {
                 imgdiff_pixels[r] = 0xff; // blue
             }
